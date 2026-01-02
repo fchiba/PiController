@@ -16,8 +16,12 @@
 
 #include "report.h"
 #include "switch_descriptors.h"
+#include "gpio_button.h"
 
 void usb_core_task(void) {
+    printf("USB: Initializing GPIO buttons...\n");
+    gpio_button_init();
+
     printf("USB: Initializing TinyUSB...\n");
     tusb_init();
 
@@ -61,8 +65,25 @@ void usb_core_task(void) {
 
     printf("USB: Init complete, entering main loop\n");
 
+    // Button state tracking
+    bool prev_btn10 = false;
+    bool prev_btn15 = false;
+
     // Main loop
     while (1) {
+        // Check button state changes
+        bool btn10 = gpio_button_10_pressed();
+        bool btn15 = gpio_button_15_pressed();
+
+        if (btn10 != prev_btn10) {
+            printf("Button GPIO10: %s\n", btn10 ? "PRESSED" : "RELEASED");
+            prev_btn10 = btn10;
+        }
+        if (btn15 != prev_btn15) {
+            printf("Button GPIO15: %s\n", btn15 ? "PRESSED" : "RELEASED");
+            prev_btn15 = btn15;
+        }
+
         get_global_gamepad_report(&report);
 
         tud_task();

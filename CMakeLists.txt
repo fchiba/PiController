@@ -41,6 +41,7 @@ add_executable(picontroller2
     src/usb_task.c
     src/usb_descriptors.c
     src/report.c
+    src/gpio_button.c
 )
 
 # Include directories for this target
