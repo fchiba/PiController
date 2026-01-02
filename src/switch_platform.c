@@ -28,6 +28,7 @@ static SwitchOutReport current_report;
 // Controller connection state
 static bool controller_connected = false;
 
+
 //
 // Helper functions
 //
@@ -131,11 +132,11 @@ static void fill_gamepad_report(uni_gamepad_t *gp) {
         current_report.buttons |= SWITCH_MASK_R3;
     }
 
-    // Triggers (ZL/ZR) - analog triggers mapped to digital buttons
-    if (gp->brake) {
+    // Triggers (ZL/ZR) - check both analog and digital
+    if (gp->brake || (gp->buttons & BUTTON_TRIGGER_L)) {
         current_report.buttons |= SWITCH_MASK_ZL;
     }
-    if (gp->throttle) {
+    if (gp->throttle || (gp->buttons & BUTTON_TRIGGER_R)) {
         current_report.buttons |= SWITCH_MASK_ZR;
     }
 
@@ -253,6 +254,7 @@ static void switch_platform_on_controller_data(uni_hid_device_t *d,
     }
 
     uni_gamepad_t *gp = &ctl->gamepad;
+
     fill_gamepad_report(gp);
     set_global_gamepad_report(&current_report);
 }
