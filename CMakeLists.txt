@@ -65,6 +65,7 @@ target_link_libraries(picontroller2 PUBLIC
     pico_cyw43_arch_none
     pico_btstack_classic
     pico_btstack_cyw43
+    pico_btstack_flash_bank
     bluepad32
     tinyusb_device
     tinyusb_board

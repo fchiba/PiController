@@ -12,6 +12,7 @@
 
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
+#include <pico/flash.h>
 
 #include "report.h"
 #include "switch_descriptors.h"
@@ -19,6 +20,13 @@
 void usb_core_task(void) {
     printf("USB: Initializing TinyUSB...\n");
     tusb_init();
+
+    // Initialize flash safety for multi-core operation
+    // This allows Core 1 (Bluetooth) to safely write to flash for link key storage
+    printf("USB: Initializing flash safety for multi-core...\n");
+    if (!flash_safe_execute_core_init()) {
+        printf("USB: Warning - flash_safe_execute_core_init() failed\n");
+    }
 
     // Initialize with neutral report (matching original: lx/ly/rx/ry = 0)
     SwitchOutReport report = {
