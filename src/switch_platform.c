@@ -14,6 +14,9 @@
 #include "report.h"
 #include "switch_descriptors.h"
 
+// External LED function for macro system coordination
+extern void macro_led_set_controller_connected(bool connected);
+
 // Sanity check
 #ifndef CONFIG_BLUEPAD32_PLATFORM_CUSTOM
 #error "Pico W must use BLUEPAD32_PLATFORM_CUSTOM"
@@ -156,7 +159,9 @@ static void fill_gamepad_report(uni_gamepad_t *gp) {
 }
 
 static void update_led_status(void) {
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, controller_connected ? 1 : 0);
+    // Notify macro LED system of connection state
+    macro_led_set_controller_connected(controller_connected);
+    // Note: actual LED control is now handled by macro_led_tick() in USB core
 }
 
 //
@@ -194,8 +199,8 @@ static void switch_platform_on_init_complete(void) {
     // Delete stored Bluetooth keys on startup (force re-pairing)
     // uni_bt_del_keys_unsafe();
 
-    // Turn off LED until controller connects
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+    // Notify LED system - LED control is handled by macro_led_tick() in USB core
+    macro_led_set_controller_connected(false);
 
     logi("switch_platform: ready for controller connection\n");
 

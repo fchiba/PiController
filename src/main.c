@@ -25,6 +25,9 @@ struct uni_platform *get_my_platform(void);
 
 // Bluetooth task - runs on Core 1
 static void bluetooth_core_task(void) {
+    // Initialize lockout victim handler so Core 0 can pause us during flash writes
+    multicore_lockout_victim_init();
+
     // Initialize CYW43 driver (enables Bluetooth)
     // Note: cyw43_arch_init() internally calls btstack_cyw43_init() which sets up
     // TLV flash storage and link key database for Bluetooth pairing persistence

@@ -17,6 +17,11 @@
 #include "report.h"
 #include "switch_descriptors.h"
 #include "gpio_button.h"
+#include "macro.h"
+
+// External LED functions
+extern void macro_led_init(void);
+extern void macro_led_tick(void);
 
 void usb_core_task(void) {
     printf("USB: Initializing GPIO buttons...\n");
@@ -31,6 +36,11 @@ void usb_core_task(void) {
     if (!flash_safe_execute_core_init()) {
         printf("USB: Warning - flash_safe_execute_core_init() failed\n");
     }
+
+    // Initialize macro system
+    printf("USB: Initializing macro system...\n");
+    macro_led_init();
+    macro_init();
 
     // Initialize with neutral report (matching original: lx/ly/rx/ry = 0)
     SwitchOutReport report = {
@@ -65,27 +75,25 @@ void usb_core_task(void) {
 
     printf("USB: Init complete, entering main loop\n");
 
-    // Button state tracking
-    bool prev_btn10 = false;
-    bool prev_btn15 = false;
-
     // Main loop
     while (1) {
-        // Check button state changes
-        bool btn10 = gpio_button_10_pressed();
-        bool btn15 = gpio_button_15_pressed();
+        uint32_t now_ms = to_ms_since_boot(get_absolute_time());
 
-        if (btn10 != prev_btn10) {
-            printf("Button GPIO10: %s\n", btn10 ? "PRESSED" : "RELEASED");
-            prev_btn10 = btn10;
-        }
-        if (btn15 != prev_btn15) {
-            printf("Button GPIO15: %s\n", btn15 ? "PRESSED" : "RELEASED");
-            prev_btn15 = btn15;
-        }
+        // Process macro buttons (record/playback triggers)
+        macro_process_buttons(now_ms);
 
-        get_global_gamepad_report(&report);
+        // Get controller input from Bluetooth core
+        SwitchOutReport controller_report;
+        get_global_gamepad_report(&controller_report);
 
+        // Process macro (recording captures input, playback merges output)
+        SwitchOutReport final_report;
+        macro_tick(&final_report, &controller_report, now_ms);
+
+        // Update LED
+        macro_led_tick();
+
+        // USB processing
         tud_task();
 
         if (tud_suspended()) {
@@ -94,7 +102,7 @@ void usb_core_task(void) {
         }
 
         if (tud_hid_ready()) {
-            tud_hid_report(0, &report, sizeof(report));
+            tud_hid_report(0, &final_report, sizeof(final_report));
         }
     }
 }

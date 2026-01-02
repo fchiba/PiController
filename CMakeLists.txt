@@ -42,6 +42,9 @@ add_executable(picontroller2
     src/usb_descriptors.c
     src/report.c
     src/gpio_button.c
+    src/macro.c
+    src/macro_flash.c
+    src/macro_led.c
 )
 
 # Include directories for this target
@@ -71,6 +74,8 @@ target_link_libraries(picontroller2 PUBLIC
     tinyusb_device
     tinyusb_board
     pico_multicore
+    pico_flash
+    hardware_flash
 )
 
 # Add bluepad32 as subdirectory
