@@ -44,15 +44,22 @@ picontroller2/
 ├── src/
 │   ├── main.c              # Entry point, launches dual-core tasks
 │   ├── switch_platform.c   # Bluepad32 platform: BT input → Switch format
-│   ├── usb_task.c          # USB HID task (Core 0)
+│   ├── usb_task.c          # USB HID task (Core 0), macro integration
 │   ├── usb_descriptors.c   # TinyUSB descriptor callbacks
 │   ├── report.c            # Thread-safe report sharing between cores
+│   ├── macro.c             # Macro state machine (record/play)
+│   ├── macro_flash.c       # Macro flash storage (5 slots, last 8KB)
+│   ├── macro_led.c         # LED feedback patterns for macro state
+│   ├── gpio_button.c       # GPIO button handling (GPIO10-15)
 │   ├── btstack_config.h    # BTstack configuration
 │   └── sdkconfig.h         # Bluepad32 configuration
 ├── include/
 │   ├── switch_descriptors.h # Switch HID report format & USB descriptors
 │   ├── report.h            # Report sharing API
 │   ├── usb_task.h          # USB task API
+│   ├── macro.h             # Macro system API
+│   ├── macro_types.h       # Macro data structures and constants
+│   ├── gpio_button.h       # GPIO button API
 │   └── tusb_config.h       # TinyUSB configuration
 ├── CMakeLists.txt          # Build configuration
 ├── pico_sdk_import.cmake   # Pico SDK integration
@@ -65,6 +72,9 @@ picontroller2/
 - **switch_platform.c** - Bluepad32 custom platform that converts gamepad input to Switch HID format. Handles button remapping (A/B, X/Y swap for Nintendo layout), analog stick conversion, and deadzone filtering.
 - **usb_descriptors.c** - TinyUSB callbacks providing HORI POKKEN USB descriptors (VID:0x0F0D PID:0x0092)
 - **report.c** - Spin-lock protected report buffer for inter-core communication
+- **macro.c** - Macro recording/playback state machine with frame thinning (100ms intervals)
+- **macro_flash.c** - Persistent storage in last 8KB of flash, 5 slots of up to 100 frames each
+- **gpio_button.c** - Debounced GPIO input handling for macro control buttons
 
 ### Dependencies
 
@@ -89,6 +99,47 @@ picontroller2/
 5. Controller input is forwarded to Switch as POKKEN controller
 
 Debug output available via UART (stdio_uart enabled).
+
+## Macro Feature
+
+The adapter supports recording and playing back controller input macros. Macros persist across power cycles (stored in flash).
+
+### GPIO Button Wiring
+
+| GPIO | Function                    |
+|------|-----------------------------|
+| 10   | Record modifier (hold)      |
+| 11   | Macro slot 0                |
+| 12   | Macro slot 1                |
+| 13   | Macro slot 2                |
+| 14   | Macro slot 3                |
+| 15   | Macro slot 4                |
+
+All buttons use internal pull-up; connect to GND to activate.
+
+### Recording a Macro
+
+1. Hold GPIO10 (record button)
+2. Press a slot button (GPIO11-15)
+3. LED blinks fast (2.5Hz) during recording
+4. Perform controller inputs (max 10 seconds, 100 frames)
+5. Release GPIO10 to stop and save
+6. LED flashes 3x on successful save
+
+### Playing a Macro
+
+1. Press a slot button (GPIO11-15) without GPIO10
+2. LED blinks medium speed (1Hz) during playback
+3. Macro input is merged with live controller input
+4. Playback stops automatically when complete
+
+### LED Patterns
+
+- **Solid on**: Controller connected, idle
+- **Fast blink** (200ms): Recording in progress
+- **Medium blink** (500ms): Playback in progress
+- **3 quick flashes**: Save successful
+- **1 second solid**: Save error
 
 ## Setup Notes
 
