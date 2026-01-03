@@ -5,19 +5,17 @@
 #include <stdint.h>
 
 // GPIO pin definitions
-#define BUTTON_GPIO_10  10   // Record modifier button
-#define BUTTON_GPIO_11  11   // Macro slot 0
-#define BUTTON_GPIO_12  12   // Macro slot 1
-#define BUTTON_GPIO_13  13   // Macro slot 2
-#define BUTTON_GPIO_14  14   // Macro slot 3
-#define BUTTON_GPIO_15  15   // Macro slot 4
-#define BUTTON_GPIO_16  16   // Single mode modifier
-#define BUTTON_GPIO_17  17   // Rapid mode modifier
-#define BUTTON_GPIO_18  18   // Continuous mode modifier
+#define BUTTON_GPIO_RECORD  14   // Record modifier button
+#define BUTTON_GPIO_SLOT0   2    // Macro slot 0
+#define BUTTON_GPIO_SLOT1   3    // Macro slot 1
+#define BUTTON_GPIO_SLOT2   6    // Macro slot 2
+#define BUTTON_GPIO_SLOT3   12   // Macro slot 3
+#define BUTTON_GPIO_SLOT4   13   // Macro slot 4
+#define BUTTON_GPIO_SINGLE  15   // Single mode modifier
+#define BUTTON_GPIO_RAPID   16   // Rapid mode modifier
+#define BUTTON_GPIO_CONT    17   // Continuous mode modifier
 
 #define BUTTON_COUNT 9
-#define SLOT_BUTTON_FIRST BUTTON_GPIO_11
-#define SLOT_BUTTON_LAST  BUTTON_GPIO_15
 #define MACRO_SLOT_COUNT  5
 
 // Timing constants
@@ -52,9 +50,5 @@ int8_t gpio_button_check_mode_combo(uint8_t *mode);
 
 // Check if a slot button is currently held (slot: 0-4)
 bool gpio_button_is_slot_held(uint8_t slot);
-
-// Legacy functions for compatibility
-bool gpio_button_10_pressed(void);
-bool gpio_button_15_pressed(void);
 
 #endif

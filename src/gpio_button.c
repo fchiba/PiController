@@ -12,13 +12,13 @@ typedef struct {
 
 static ButtonState buttons[BUTTON_COUNT];
 static const uint8_t gpio_pins[BUTTON_COUNT] = {
-    BUTTON_GPIO_10, BUTTON_GPIO_11, BUTTON_GPIO_12,
-    BUTTON_GPIO_13, BUTTON_GPIO_14, BUTTON_GPIO_15,
-    BUTTON_GPIO_16, BUTTON_GPIO_17, BUTTON_GPIO_18
+    BUTTON_GPIO_RECORD, BUTTON_GPIO_SLOT0, BUTTON_GPIO_SLOT1,
+    BUTTON_GPIO_SLOT2, BUTTON_GPIO_SLOT3, BUTTON_GPIO_SLOT4,
+    BUTTON_GPIO_SINGLE, BUTTON_GPIO_RAPID, BUTTON_GPIO_CONT
 };
 
-// Track when GPIO10 was pressed for simultaneous detection
-static uint32_t gpio10_press_time = 0;
+// Track when record button was pressed for simultaneous detection
+static uint32_t record_press_time = 0;
 
 void gpio_button_init(void) {
     for (int i = 0; i < BUTTON_COUNT; i++) {
@@ -72,9 +72,9 @@ uint8_t gpio_button_update(uint32_t now_ms) {
         }
     }
 
-    // Track GPIO10 press time for simultaneous detection
+    // Track record button press time for simultaneous detection
     if (buttons[0].just_pressed) {
-        gpio10_press_time = now_ms;
+        record_press_time = now_ms;
     }
 
     return pressed_mask;
@@ -160,14 +160,5 @@ int8_t gpio_button_check_mode_combo(uint8_t *mode) {
 // Check if a slot button is currently held
 bool gpio_button_is_slot_held(uint8_t slot) {
     if (slot >= MACRO_SLOT_COUNT) return false;
-    return buttons[slot + 1].stable_state;  // slot 0 = buttons[1] (GPIO11)
-}
-
-// Legacy functions for compatibility
-bool gpio_button_10_pressed(void) {
-    return gpio_button_is_pressed(BUTTON_GPIO_10);
-}
-
-bool gpio_button_15_pressed(void) {
-    return gpio_button_is_pressed(BUTTON_GPIO_15);
+    return buttons[slot + 1].stable_state;  // slot 0 = buttons[1]
 }

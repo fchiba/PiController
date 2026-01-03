@@ -50,7 +50,7 @@ picontroller2/
 │   ├── macro.c             # Macro state machine (record/play)
 │   ├── macro_flash.c       # Macro flash storage (5 slots, last 8KB)
 │   ├── macro_led.c         # LED feedback patterns for macro state
-│   ├── gpio_button.c       # GPIO button handling (GPIO10-15)
+│   ├── gpio_button.c       # GPIO button handling for macro control
 │   ├── btstack_config.h    # BTstack configuration
 │   └── sdkconfig.h         # Bluepad32 configuration
 ├── include/
@@ -104,34 +104,44 @@ Debug output available via UART (stdio_uart enabled).
 
 The adapter supports recording and playing back controller input macros. Macros persist across power cycles (stored in flash).
 
-### GPIO Button Wiring
+### GPIO Wiring
 
+#### Buttons
 | GPIO | Function                    |
 |------|-----------------------------|
-| 10   | Record modifier (hold)      |
-| 11   | Macro slot 0                |
-| 12   | Macro slot 1                |
-| 13   | Macro slot 2                |
-| 14   | Macro slot 3                |
-| 15   | Macro slot 4                |
-| 16   | Single mode modifier (hold) |
-| 17   | Rapid mode modifier (hold)  |
-| 18   | Continuous mode modifier (hold) |
+| 14   | Record modifier (hold)      |
+| 2    | Macro slot 0                |
+| 3    | Macro slot 1                |
+| 6    | Macro slot 2                |
+| 12   | Macro slot 3                |
+| 13   | Macro slot 4                |
+| 15   | Single mode modifier (hold) |
+| 16   | Rapid mode modifier (hold)  |
+| 17   | Continuous mode modifier (hold) |
 
 All buttons use internal pull-up; connect to GND to activate.
 
+#### Slot LEDs (PWM)
+| GPIO | Function   |
+|------|------------|
+| 28   | LED slot 0 |
+| 27   | LED slot 1 |
+| 26   | LED slot 2 |
+| 21   | LED slot 3 |
+| 18   | LED slot 4 |
+
 ### Recording a Macro
 
-1. Hold GPIO10 (record button)
-2. Press a slot button (GPIO11-15)
+1. Hold GPIO14 (record button)
+2. Press a slot button
 3. LED blinks fast (2.5Hz) during recording
 4. Perform controller inputs (max 10 seconds, 100 frames)
-5. Release GPIO10 to stop and save
+5. Release GPIO14 to stop and save
 6. LED flashes 3x on successful save
 
 ### Playing a Macro
 
-1. Press a slot button (GPIO11-15) without GPIO10
+1. Press a slot button without GPIO14
 2. LED blinks medium speed (1Hz) during playback
 3. Macro input is merged with live controller input
 4. Playback stops automatically when complete
@@ -142,9 +152,9 @@ Each slot can be set to one of three playback modes:
 
 | Mode | Set with | Behavior |
 |------|----------|----------|
-| Single | GPIO16 + slot | Play once and stop (default) |
-| Rapid | GPIO17 + slot | Repeat while button held |
-| Continuous | GPIO18 + slot | Toggle: press to start, press again to stop |
+| Single | GPIO15 + slot | Play once and stop (default) |
+| Rapid | GPIO16 + slot | Repeat while button held |
+| Continuous | GPIO17 + slot | Toggle: press to start, press again to stop |
 
 Mode settings are stored in RAM (reset on power cycle).
 

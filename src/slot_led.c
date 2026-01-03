@@ -6,7 +6,7 @@
 
 #define SLOT_LED_COUNT 5
 
-static const uint8_t slot_gpio[SLOT_LED_COUNT] = {19, 20, 21, 22, 26};
+static const uint8_t slot_gpio[SLOT_LED_COUNT] = {28, 27, 26, 21, 18};
 static bool slot_recording[SLOT_LED_COUNT] = {false};
 static uint32_t recording_start_time[SLOT_LED_COUNT] = {0};
 
