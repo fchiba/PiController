@@ -56,7 +56,7 @@ typedef struct {
 // USB Descriptor strings
 static const uint8_t switch_string_language[]     = { 0x09, 0x04 };
 static const uint8_t switch_string_manufacturer[] = "HORI CO.,LTD.";
-static const uint8_t switch_string_product[]      = "POKKEN CONTROLLER";
+static const uint8_t switch_string_product[]      = "HORIPAD S";
 static const uint8_t switch_string_version[]      = "1.0";
 
 static const uint8_t *switch_string_descriptors[] = {
@@ -66,7 +66,7 @@ static const uint8_t *switch_string_descriptors[] = {
     switch_string_version
 };
 
-// USB Device Descriptor - VID:0x0F0D PID:0x0092 (HORI POKKEN)
+// USB Device Descriptor - VID:0x0F0D PID:0x00DC (HORIPAD S)
 static const uint8_t switch_device_descriptor[] = {
     0x12,       // bLength
     0x01,       // bDescriptorType (Device)
@@ -76,7 +76,7 @@ static const uint8_t switch_device_descriptor[] = {
     0x00,       // bDeviceProtocol
     0x40,       // bMaxPacketSize0 64
     0x0D, 0x0F, // idVendor 0x0F0D (HORI)
-    0x92, 0x00, // idProduct 0x0092
+    0xDC, 0x00, // idProduct 0x00DC (HORIPAD S)
     0x00, 0x01, // bcdDevice 1.00
     0x01,       // iManufacturer (String Index)
     0x02,       // iProduct (String Index)
