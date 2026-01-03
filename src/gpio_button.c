@@ -14,7 +14,7 @@ static ButtonState buttons[BUTTON_COUNT];
 static const uint8_t gpio_pins[BUTTON_COUNT] = {
     BUTTON_GPIO_10, BUTTON_GPIO_11, BUTTON_GPIO_12,
     BUTTON_GPIO_13, BUTTON_GPIO_14, BUTTON_GPIO_15,
-    BUTTON_GPIO_16, BUTTON_GPIO_17
+    BUTTON_GPIO_16, BUTTON_GPIO_17, BUTTON_GPIO_18
 };
 
 // Track when GPIO10 was pressed for simultaneous detection
@@ -125,22 +125,31 @@ int8_t gpio_button_check_playback_trigger(void) {
     return -1;
 }
 
-// Check for mode switch combo (GPIO16/17 + slot button)
-int8_t gpio_button_check_mode_combo(bool *is_rapid) {
-    // GP16 (index 6) pressed = single mode
+// Check for mode switch combo (GPIO16/17/18 + slot button)
+int8_t gpio_button_check_mode_combo(uint8_t *mode) {
+    // GP16 (index 6) pressed = single mode (0)
     if (buttons[6].stable_state) {
         for (int i = 1; i <= MACRO_SLOT_COUNT; i++) {
             if (buttons[i].just_pressed) {
-                *is_rapid = false;
+                *mode = 0;
                 return (int8_t)(i - 1);
             }
         }
     }
-    // GP17 (index 7) pressed = rapid mode
+    // GP17 (index 7) pressed = rapid mode (1)
     if (buttons[7].stable_state) {
         for (int i = 1; i <= MACRO_SLOT_COUNT; i++) {
             if (buttons[i].just_pressed) {
-                *is_rapid = true;
+                *mode = 1;
+                return (int8_t)(i - 1);
+            }
+        }
+    }
+    // GP18 (index 8) pressed = continuous mode (2)
+    if (buttons[8].stable_state) {
+        for (int i = 1; i <= MACRO_SLOT_COUNT; i++) {
+            if (buttons[i].just_pressed) {
+                *mode = 2;
                 return (int8_t)(i - 1);
             }
         }

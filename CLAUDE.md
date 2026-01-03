@@ -116,6 +116,7 @@ The adapter supports recording and playing back controller input macros. Macros 
 | 15   | Macro slot 4                |
 | 16   | Single mode modifier (hold) |
 | 17   | Rapid mode modifier (hold)  |
+| 18   | Continuous mode modifier (hold) |
 
 All buttons use internal pull-up; connect to GND to activate.
 
@@ -135,17 +136,21 @@ All buttons use internal pull-up; connect to GND to activate.
 3. Macro input is merged with live controller input
 4. Playback stops automatically when complete
 
-### Rapid Fire Mode
+### Playback Modes
 
-Each slot can be set to rapid fire mode, which continuously repeats playback while the slot button is held.
+Each slot can be set to one of three playback modes:
 
-1. Hold GPIO17 + press a slot button to enable rapid fire mode for that slot
-2. Hold GPIO16 + press a slot button to return to single (normal) mode
-3. Mode settings are stored in RAM (reset on power cycle)
+| Mode | Set with | Behavior |
+|------|----------|----------|
+| Single | GPIO16 + slot | Play once and stop (default) |
+| Rapid | GPIO17 + slot | Repeat while button held |
+| Continuous | GPIO18 + slot | Toggle: press to start, press again to stop |
 
-In rapid fire mode:
-- Press and hold the slot button to continuously repeat the macro
-- Release the button to stop immediately
+Mode settings are stored in RAM (reset on power cycle).
+
+**Rapid mode**: Press and hold the slot button to continuously repeat the macro. Release to stop.
+
+**Continuous mode**: Press the slot button once to start looping. Press again to stop.
 
 ### LED Patterns
 

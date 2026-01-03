@@ -14,8 +14,15 @@ extern void macro_led_flash_save_result(bool success);
 // Global macro context
 static MacroContext ctx;
 
-// Per-slot rapid fire mode (reset on power cycle)
-static bool slot_rapid_mode[MACRO_SLOT_COUNT] = {false, false, false, false, false};
+// Slot playback mode
+typedef enum {
+    SLOT_MODE_SINGLE = 0,     // Single shot (default)
+    SLOT_MODE_RAPID = 1,      // Rapid fire (hold button)
+    SLOT_MODE_CONTINUOUS = 2  // Continuous (toggle)
+} SlotMode;
+
+// Per-slot mode (reset on power cycle)
+static SlotMode slot_mode[MACRO_SLOT_COUNT] = {0};
 
 // Check if report is neutral (no buttons, sticks centered)
 static bool is_neutral_report(const SwitchOutReport *report) {
@@ -188,13 +195,14 @@ void macro_process_buttons(uint32_t now_ms) {
 
     switch (ctx.state) {
         case MACRO_STATE_IDLE: {
-            // Check for mode switch combo (GPIO16/17 + slot)
-            bool is_rapid;
-            int8_t mode_slot = gpio_button_check_mode_combo(&is_rapid);
+            // Check for mode switch combo (GPIO16/17/18 + slot)
+            uint8_t mode;
+            int8_t mode_slot = gpio_button_check_mode_combo(&mode);
             if (mode_slot >= 0) {
-                slot_rapid_mode[mode_slot] = is_rapid;
+                slot_mode[mode_slot] = (SlotMode)mode;
+                const char *mode_names[] = {"single", "rapid", "continuous"};
                 printf("Macro: Slot %d set to %s mode\n",
-                       mode_slot, is_rapid ? "rapid" : "single");
+                       mode_slot, mode_names[mode]);
                 return;
             }
 
@@ -232,7 +240,14 @@ void macro_process_buttons(uint32_t now_ms) {
         }
 
         case MACRO_STATE_PLAYING:
-            // Buttons already updated above
+            // Continuous mode: pressing slot button again stops playback
+            if (slot_mode[ctx.active_slot] == SLOT_MODE_CONTINUOUS) {
+                int8_t pressed_slot = gpio_button_check_playback_trigger();
+                if (pressed_slot == ctx.active_slot) {
+                    stop_playback();
+                    return;
+                }
+            }
             break;
     }
 }
@@ -295,7 +310,7 @@ void macro_tick(SwitchOutReport *output, const SwitchOutReport *controller_input
 
         case MACRO_STATE_PLAYING: {
             // Rapid mode: stop immediately when button released
-            if (slot_rapid_mode[ctx.active_slot] &&
+            if (slot_mode[ctx.active_slot] == SLOT_MODE_RAPID &&
                 !gpio_button_is_slot_held(ctx.active_slot)) {
                 stop_playback();
                 memcpy(output, controller_input, sizeof(SwitchOutReport));
@@ -336,9 +351,18 @@ void macro_tick(SwitchOutReport *output, const SwitchOutReport *controller_input
 
             // Check if playback complete
             if (ctx.play_index >= ctx.play_frame_count) {
-                // Rapid mode: restart if button still held
-                if (slot_rapid_mode[ctx.active_slot] &&
+                bool should_loop = false;
+
+                if (slot_mode[ctx.active_slot] == SLOT_MODE_RAPID &&
                     gpio_button_is_slot_held(ctx.active_slot)) {
+                    // Rapid mode: loop while button held
+                    should_loop = true;
+                } else if (slot_mode[ctx.active_slot] == SLOT_MODE_CONTINUOUS) {
+                    // Continuous mode: always loop
+                    should_loop = true;
+                }
+
+                if (should_loop) {
                     // Restart with a gap (neutral frame) before first frame
                     ctx.play_index = 0;
                     ctx.next_frame_time = now_ms + 100;  // 100ms gap between loops

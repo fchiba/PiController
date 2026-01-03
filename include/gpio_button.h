@@ -13,8 +13,9 @@
 #define BUTTON_GPIO_15  15   // Macro slot 4
 #define BUTTON_GPIO_16  16   // Single mode modifier
 #define BUTTON_GPIO_17  17   // Rapid mode modifier
+#define BUTTON_GPIO_18  18   // Continuous mode modifier
 
-#define BUTTON_COUNT 8
+#define BUTTON_COUNT 9
 #define SLOT_BUTTON_FIRST BUTTON_GPIO_11
 #define SLOT_BUTTON_LAST  BUTTON_GPIO_15
 #define MACRO_SLOT_COUNT  5
@@ -43,11 +44,11 @@ int8_t gpio_button_check_record_combo(void);
 // Returns slot number (0-4) if playback should start, -1 otherwise
 int8_t gpio_button_check_playback_trigger(void);
 
-// Check for mode switch combo (GPIO16/17 + slot button)
+// Check for mode switch combo (GPIO16/17/18 + slot button)
 // Must call gpio_button_update() before this
 // Returns slot number (0-4), -1 if none
-// *is_rapid = true if GP17 was pressed, false if GP16
-int8_t gpio_button_check_mode_combo(bool *is_rapid);
+// *mode = 0 (single), 1 (rapid), 2 (continuous)
+int8_t gpio_button_check_mode_combo(uint8_t *mode);
 
 // Check if a slot button is currently held (slot: 0-4)
 bool gpio_button_is_slot_held(uint8_t slot);
