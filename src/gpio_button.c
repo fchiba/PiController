@@ -13,7 +13,8 @@ typedef struct {
 static ButtonState buttons[BUTTON_COUNT];
 static const uint8_t gpio_pins[BUTTON_COUNT] = {
     BUTTON_GPIO_10, BUTTON_GPIO_11, BUTTON_GPIO_12,
-    BUTTON_GPIO_13, BUTTON_GPIO_14, BUTTON_GPIO_15
+    BUTTON_GPIO_13, BUTTON_GPIO_14, BUTTON_GPIO_15,
+    BUTTON_GPIO_16, BUTTON_GPIO_17
 };
 
 // Track when GPIO10 was pressed for simultaneous detection
@@ -122,6 +123,35 @@ int8_t gpio_button_check_playback_trigger(void) {
     }
 
     return -1;
+}
+
+// Check for mode switch combo (GPIO16/17 + slot button)
+int8_t gpio_button_check_mode_combo(bool *is_rapid) {
+    // GP16 (index 6) pressed = single mode
+    if (buttons[6].stable_state) {
+        for (int i = 1; i <= MACRO_SLOT_COUNT; i++) {
+            if (buttons[i].just_pressed) {
+                *is_rapid = false;
+                return (int8_t)(i - 1);
+            }
+        }
+    }
+    // GP17 (index 7) pressed = rapid mode
+    if (buttons[7].stable_state) {
+        for (int i = 1; i <= MACRO_SLOT_COUNT; i++) {
+            if (buttons[i].just_pressed) {
+                *is_rapid = true;
+                return (int8_t)(i - 1);
+            }
+        }
+    }
+    return -1;
+}
+
+// Check if a slot button is currently held
+bool gpio_button_is_slot_held(uint8_t slot) {
+    if (slot >= MACRO_SLOT_COUNT) return false;
+    return buttons[slot + 1].stable_state;  // slot 0 = buttons[1] (GPIO11)
 }
 
 // Legacy functions for compatibility
