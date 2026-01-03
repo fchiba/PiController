@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pico/rand.h>
+#include "usb_debug.h"
 
 //--------------------------------------------------------------------+
 // SPI Flash Read Emulation
@@ -428,6 +429,11 @@ bool switch_pro_handler_get_response(SwitchProHandler *handler,
     *size = 64;
     *report_id = handler->queuedReportID;
     handler->isReportQueued = false;
+
+    USB_DBG_XFER("SEND response report_id=0x%02x", *report_id);
+#if USB_DEBUG_HEXDUMP
+    usb_debug_hexdump("SEND response", buffer, 64);
+#endif
 
     return true;
 }

@@ -8,6 +8,7 @@
 #include "tusb.h"
 #include "switch_descriptors.h"
 #include "switch_pro_handler.h"
+#include "usb_debug.h"
 
 // External handler from usb_task.c
 extern SwitchProHandler g_switch_pro_handler;
@@ -17,6 +18,10 @@ extern SwitchProHandler g_switch_pro_handler;
 //--------------------------------------------------------------------+
 
 uint8_t const *tud_descriptor_device_cb(void) {
+    USB_DBG_DESC("device_cb called");
+#if USB_DEBUG_HEXDUMP
+    usb_debug_hexdump("device_desc", switch_device_descriptor, sizeof(switch_device_descriptor));
+#endif
     return switch_device_descriptor;
 }
 
@@ -25,7 +30,10 @@ uint8_t const *tud_descriptor_device_cb(void) {
 //--------------------------------------------------------------------+
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
-    (void)instance;
+    USB_DBG_DESC("report_desc_cb instance=%d len=%zu", instance, sizeof(switch_report_descriptor));
+#if USB_DEBUG_HEXDUMP
+    usb_debug_hexdump("report_desc", switch_report_descriptor, sizeof(switch_report_descriptor));
+#endif
     return switch_report_descriptor;
 }
 
@@ -64,7 +72,10 @@ static uint8_t const desc_configuration[] = {
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
-    (void)index;
+    USB_DBG_DESC("config_cb index=%d len=%zu", index, sizeof(desc_configuration));
+#if USB_DEBUG_HEXDUMP
+    usb_debug_hexdump("config_desc", desc_configuration, sizeof(desc_configuration));
+#endif
     return desc_configuration;
 }
 
@@ -75,7 +86,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 static uint16_t _desc_str[32];
 
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
-    (void)langid;
+    USB_DBG_DESC("string_cb index=%d langid=0x%04x", index, langid);
 
     uint8_t chr_count;
 
@@ -117,12 +128,18 @@ uint16_t tud_hid_get_report_cb(uint8_t instance,
                                 hid_report_type_t report_type,
                                 uint8_t *buffer,
                                 uint16_t reqlen) {
-    (void)instance;
-    return switch_pro_handler_get_report(&g_switch_pro_handler,
+    USB_DBG_XFER("GET_REPORT instance=%d id=0x%02x type=%d reqlen=%d", instance, report_id, report_type, reqlen);
+    uint16_t ret = switch_pro_handler_get_report(&g_switch_pro_handler,
                                           report_id,
                                           report_type,
                                           buffer,
                                           reqlen);
+#if USB_DEBUG_HEXDUMP
+    if (ret > 0) {
+        usb_debug_hexdump("GET_REPORT response", buffer, ret);
+    }
+#endif
+    return ret;
 }
 
 // Invoked when received SET_REPORT control request or data on OUT endpoint
@@ -131,7 +148,10 @@ void tud_hid_set_report_cb(uint8_t instance,
                            hid_report_type_t report_type,
                            uint8_t const *buffer,
                            uint16_t bufsize) {
-    (void)instance;
+    USB_DBG_XFER("SET_REPORT instance=%d id=0x%02x type=%d len=%d", instance, report_id, report_type, bufsize);
+#if USB_DEBUG_HEXDUMP
+    usb_debug_hexdump("SET_REPORT data", buffer, bufsize);
+#endif
     switch_pro_handler_set_report(&g_switch_pro_handler,
                                    report_id,
                                    report_type,

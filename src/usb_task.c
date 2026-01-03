@@ -20,6 +20,7 @@
 #include "gpio_button.h"
 #include "macro.h"
 #include "slot_led.h"
+#include "usb_debug.h"
 
 // External LED functions
 extern void macro_led_init(void);
@@ -180,4 +181,24 @@ void usb_core_task(void) {
             }
         }
     }
+}
+
+//--------------------------------------------------------------------+
+// TinyUSB Device Callbacks (for debug logging)
+//--------------------------------------------------------------------+
+
+void tud_mount_cb(void) {
+    USB_DBG_STATE("MOUNTED");
+}
+
+void tud_umount_cb(void) {
+    USB_DBG_STATE("UNMOUNTED");
+}
+
+void tud_suspend_cb(bool remote_wakeup_en) {
+    USB_DBG_STATE("SUSPENDED (remote_wakeup=%d)", remote_wakeup_en);
+}
+
+void tud_resume_cb(void) {
+    USB_DBG_STATE("RESUMED");
 }

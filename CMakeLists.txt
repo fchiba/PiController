@@ -47,7 +47,11 @@ add_executable(picontroller2
     src/macro_led.c
     src/slot_led.c
     src/switch_pro_handler.c
+    src/usb_debug.c
 )
+
+# USB enumeration debug (uncomment to enable detailed USB logging)
+target_compile_definitions(picontroller2 PRIVATE USB_DEBUG_ENABLE)
 
 # Include directories for this target
 target_include_directories(picontroller2 PRIVATE
