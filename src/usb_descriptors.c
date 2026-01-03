@@ -1,5 +1,5 @@
 /*
- * TinyUSB Descriptor callbacks for Nintendo Switch HID
+ * TinyUSB Descriptor callbacks for Nintendo Switch Pro Controller
  * SPDX-License-Identifier: MIT
  */
 
@@ -7,6 +7,10 @@
 #include <string.h>
 #include "tusb.h"
 #include "switch_descriptors.h"
+#include "switch_pro_handler.h"
+
+// External handler from usb_task.c
+extern SwitchProHandler g_switch_pro_handler;
 
 //--------------------------------------------------------------------+
 // Device Descriptor
@@ -27,7 +31,7 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
-// Switch requires both IN and OUT endpoints - use TUD_HID_INOUT_DESCRIPTOR
+// Use TinyUSB macro for proper HID driver initialization
 //--------------------------------------------------------------------+
 
 enum {
@@ -35,9 +39,8 @@ enum {
     ITF_NUM_TOTAL
 };
 
-// TUD_HID_INOUT_DESCRIPTOR length: 9 (interface) + 9 (HID) + 7 (EP OUT) + 7 (EP IN) = 32
 #define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
-#define EPNUM_HID_OUT 0x02
+#define EPNUM_HID_OUT 0x01
 #define EPNUM_HID_IN  0x81
 
 static uint8_t const desc_configuration[] = {
@@ -57,7 +60,7 @@ static uint8_t const desc_configuration[] = {
                               EPNUM_HID_OUT,
                               EPNUM_HID_IN,
                               64,  // EP size must be 64 for Switch
-                              1),  // Polling interval 1ms
+                              8),  // Polling interval 8ms for Pro Controller
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
@@ -115,11 +118,11 @@ uint16_t tud_hid_get_report_cb(uint8_t instance,
                                 uint8_t *buffer,
                                 uint16_t reqlen) {
     (void)instance;
-    (void)report_id;
-    (void)report_type;
-    (void)buffer;
-    (void)reqlen;
-    return 0;
+    return switch_pro_handler_get_report(&g_switch_pro_handler,
+                                          report_id,
+                                          report_type,
+                                          buffer,
+                                          reqlen);
 }
 
 // Invoked when received SET_REPORT control request or data on OUT endpoint
@@ -129,8 +132,9 @@ void tud_hid_set_report_cb(uint8_t instance,
                            uint8_t const *buffer,
                            uint16_t bufsize) {
     (void)instance;
-    (void)report_id;
-    (void)report_type;
-    (void)buffer;
-    (void)bufsize;
+    switch_pro_handler_set_report(&g_switch_pro_handler,
+                                   report_id,
+                                   report_type,
+                                   buffer,
+                                   bufsize);
 }
