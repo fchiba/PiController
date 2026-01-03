@@ -1,5 +1,6 @@
 #include "macro.h"
 #include "gpio_button.h"
+#include "slot_led.h"
 #include "pico/stdlib.h"
 #include <string.h>
 #include <stdio.h>
@@ -13,13 +14,6 @@ extern void macro_led_flash_save_result(bool success);
 
 // Global macro context
 static MacroContext ctx;
-
-// Slot playback mode
-typedef enum {
-    SLOT_MODE_SINGLE = 0,     // Single shot (default)
-    SLOT_MODE_RAPID = 1,      // Rapid fire (hold button)
-    SLOT_MODE_CONTINUOUS = 2  // Continuous (toggle)
-} SlotMode;
 
 // Per-slot mode (reset on power cycle)
 static SlotMode slot_mode[MACRO_SLOT_COUNT] = {0};
@@ -111,12 +105,14 @@ static void start_recording(uint8_t slot, uint32_t now_ms) {
     ctx.last_report.ry = SWITCH_JOYSTICK_MID;
 
     macro_led_set_recording(true);
+    slot_led_set_recording(slot, true);
     printf("Macro: Recording started for slot %d\n", slot);
 }
 
 // Stop recording and save to flash
 static void stop_recording(uint32_t now_ms) {
     macro_led_set_recording(false);
+    slot_led_set_recording(ctx.active_slot, false);
 
     // Trim trailing neutral frames
     while (ctx.record_count > 0) {
@@ -400,4 +396,9 @@ void macro_stop(void) {
     } else if (ctx.state == MACRO_STATE_PLAYING) {
         stop_playback();
     }
+}
+
+SlotMode macro_get_slot_mode(uint8_t slot) {
+    if (slot >= MACRO_SLOT_COUNT) return SLOT_MODE_SINGLE;
+    return slot_mode[slot];
 }

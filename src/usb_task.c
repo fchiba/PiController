@@ -18,6 +18,7 @@
 #include "switch_descriptors.h"
 #include "gpio_button.h"
 #include "macro.h"
+#include "slot_led.h"
 
 // External LED functions
 extern void macro_led_init(void);
@@ -41,6 +42,7 @@ void usb_core_task(void) {
     printf("USB: Initializing macro system...\n");
     macro_led_init();
     macro_init();
+    slot_led_init();
 
     // Initialize with neutral report (matching original: lx/ly/rx/ry = 0)
     SwitchOutReport report = {
@@ -90,8 +92,9 @@ void usb_core_task(void) {
         SwitchOutReport final_report;
         macro_tick(&final_report, &controller_report, now_ms);
 
-        // Update LED
+        // Update LEDs
         macro_led_tick();
+        slot_led_tick(now_ms);
 
         // USB processing
         tud_task();

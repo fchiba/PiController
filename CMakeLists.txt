@@ -45,6 +45,7 @@ add_executable(picontroller2
     src/macro.c
     src/macro_flash.c
     src/macro_led.c
+    src/slot_led.c
 )
 
 # Include directories for this target
@@ -76,6 +77,7 @@ target_link_libraries(picontroller2 PUBLIC
     pico_multicore
     pico_flash
     hardware_flash
+    hardware_pwm
 )
 
 # Add bluepad32 as subdirectory
