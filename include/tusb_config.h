@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 #ifndef CFG_TUSB_OS
-#define CFG_TUSB_OS OPT_OS_NONE
+#define CFG_TUSB_OS OPT_OS_PICO
 #endif
 
 // Enable Device stack
@@ -51,6 +51,10 @@ extern "C" {
 #ifndef CFG_TUSB_MEM_ALIGN
 #define CFG_TUSB_MEM_ALIGN __attribute__((aligned(4)))
 #endif
+
+// TinyUSB debug level (0-3, higher = more verbose)
+// NOTE: Must be 0 for Switch 2 compatibility - debug output causes timing issues
+#define CFG_TUSB_DEBUG 0
 
 //--------------------------------------------------------------------
 // DEVICE CONFIGURATION

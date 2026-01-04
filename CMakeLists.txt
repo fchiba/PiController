@@ -54,7 +54,7 @@ add_executable(picontroller2
 
 # USB enumeration debug - DISABLED for Switch 2 compatibility
 # Debug output causes USB timing issues that prevent enumeration on Switch 2
-# target_compile_definitions(picontroller2 PRIVATE USB_DEBUG_ENABLE)
+target_compile_definitions(picontroller2 PRIVATE USB_DEBUG_ENABLE)
 
 # Enable RP2040 USB device enumeration fix (required for reliable USB enumeration)
 target_compile_definitions(picontroller2 PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
