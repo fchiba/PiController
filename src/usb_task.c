@@ -25,12 +25,29 @@
 extern void macro_led_init(void);
 extern void macro_led_tick(void);
 
+void usb_init_and_wait_mount(void) {
+    printf("USB: Initializing TinyUSB...\n");
+    // Use tud_init(0) explicitly like GP2040-CE does
+    bool usb_ok = tud_init(0);
+    printf("USB: tud_init(0) returned %d\n", usb_ok);
+
+    printf("USB: Waiting for device to mount (Bluetooth held off)...\n");
+
+    // Wait for USB to be mounted before allowing Bluetooth to start
+    // This ensures clean USB enumeration without Core1 interference
+    while (!tud_mounted()) {
+        tud_task();
+        sleep_ms(1);
+    }
+    printf("USB: Device mounted\n");
+}
+
 void usb_core_task(void) {
+    // Note: tusb_init() and mount wait are done in usb_init_and_wait_mount()
+    // called from main.c before Core1 launch
+
     printf("USB: Initializing GPIO buttons...\n");
     gpio_button_init();
-
-    printf("USB: Initializing TinyUSB...\n");
-    tusb_init();
 
     // Initialize flash safety for multi-core operation
     // This allows Core 1 (Bluetooth) to safely write to flash for link key storage
@@ -55,15 +72,7 @@ void usb_core_task(void) {
         .ry = 0,
     };
 
-    printf("USB: Waiting for device to mount...\n");
-
-    // Wait for USB to be mounted
-    while (!tud_mounted()) {
-        tud_task();
-        sleep_ms(10);
-    }
-
-    printf("USB: Device mounted!\n");
+    printf("USB: Device already mounted, continuing...\n");
 
     // Send empty reports for ~5 seconds to ensure Switch recognizes the device
     // Original code runs exactly 50 iterations regardless of FIFO status
@@ -100,8 +109,8 @@ void usb_core_task(void) {
         // USB processing
         tud_task();
 
+        // Skip if suspended (Remote Wakeup is not supported for Switch 2 compatibility)
         if (tud_suspended()) {
-            tud_remote_wakeup();
             continue;
         }
 

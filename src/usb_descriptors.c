@@ -36,46 +36,17 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
-// Switch requires both IN and OUT endpoints - use TUD_HID_INOUT_DESCRIPTOR
+// Use static descriptor from switch_descriptors.h for Switch 2 compatibility
+// (bmAttributes must be 0x80, not 0xA0 with Remote Wakeup)
 //--------------------------------------------------------------------+
 
-enum {
-    ITF_NUM_HID,
-    ITF_NUM_TOTAL
-};
-
-// TUD_HID_INOUT_DESCRIPTOR length: 9 (interface) + 9 (HID) + 7 (EP OUT) + 7 (EP IN) = 32
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
-#define EPNUM_HID_OUT 0x02
-#define EPNUM_HID_IN  0x81
-
-static uint8_t const desc_configuration[] = {
-    // Config number, interface count, string index, total length, attribute, power in mA
-    TUD_CONFIG_DESCRIPTOR(1,
-                          ITF_NUM_TOTAL,
-                          0,
-                          CONFIG_TOTAL_LEN,
-                          TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,
-                          500),
-
-    // Interface number, string index, protocol, report descriptor len, EP OUT, EP IN, size & polling interval
-    TUD_HID_INOUT_DESCRIPTOR(ITF_NUM_HID,
-                              0,
-                              HID_ITF_PROTOCOL_NONE,
-                              sizeof(switch_report_descriptor),
-                              EPNUM_HID_OUT,
-                              EPNUM_HID_IN,
-                              64,  // EP size must be 64 for Switch
-                              1),  // Polling interval 1ms
-};
-
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
-    USB_DBG_DESC("config_cb index=%d len=%zu", index, sizeof(desc_configuration));
+    USB_DBG_DESC("config_cb index=%d len=%zu", index, sizeof(switch_configuration_descriptor));
 #if USB_DEBUG_HEXDUMP
-    usb_debug_hexdump("config_desc", desc_configuration, sizeof(desc_configuration));
+    usb_debug_hexdump("config_desc", switch_configuration_descriptor, sizeof(switch_configuration_descriptor));
 #endif
     (void)index;
-    return desc_configuration;
+    return switch_configuration_descriptor;
 }
 
 //--------------------------------------------------------------------+

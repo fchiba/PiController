@@ -26,6 +26,9 @@ set(PICO_BOARD pico_w CACHE STRING "Board type")
 set(BLUEPAD32_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/bluepad32)
 set(BTSTACK_ROOT ${PICO_SDK_PATH}/lib/btstack)
 
+# Note: Using Pico SDK's default TinyUSB (0.18.0)
+# GP2040-CE's TinyUSB 0.17.0 was tried but didn't fix Switch 2 enumeration issue
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
@@ -49,8 +52,12 @@ add_executable(picontroller2
     src/usb_debug.c
 )
 
-# USB enumeration debug (uncomment to enable detailed USB logging)
-target_compile_definitions(picontroller2 PRIVATE USB_DEBUG_ENABLE)
+# USB enumeration debug - DISABLED for Switch 2 compatibility
+# Debug output causes USB timing issues that prevent enumeration on Switch 2
+# target_compile_definitions(picontroller2 PRIVATE USB_DEBUG_ENABLE)
+
+# Enable RP2040 USB device enumeration fix (required for reliable USB enumeration)
+target_compile_definitions(picontroller2 PRIVATE PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
 
 # Include directories for this target
 target_include_directories(picontroller2 PRIVATE

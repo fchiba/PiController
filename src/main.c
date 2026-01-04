@@ -6,6 +6,8 @@
  * - Core 1: Bluetooth input (bluepad32 + BTstack)
  */
 
+#include <stdio.h>
+#include <stdbool.h>
 #include <btstack_run_loop.h>
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h>
@@ -52,7 +54,14 @@ static void bluetooth_core_task(void) {
 int main(void) {
     stdio_init_all();
 
-    // Launch Bluetooth on Core 1
+    // Initialize USB and wait for mount before starting Bluetooth
+    // This prevents Core1 activity from interfering with USB enumeration
+    // (Switch 2 is stricter about USB timing than Switch 1)
+    usb_init_and_wait_mount();
+
+    printf("USB: Device mounted, launching Bluetooth on Core 1\n");
+
+    // Launch Bluetooth on Core 1 (after USB is mounted)
     multicore_launch_core1(bluetooth_core_task);
 
     // Run USB on Core 0 (this core)
