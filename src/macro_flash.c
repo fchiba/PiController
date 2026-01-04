@@ -5,8 +5,10 @@
 #include <string.h>
 #include <stdio.h>
 
-// Flash storage at end of flash memory
-#define FLASH_MACRO_OFFSET (PICO_FLASH_SIZE_BYTES - (MACRO_FLASH_SECTORS * FLASH_SECTOR_SIZE))
+// Flash storage layout (from end of flash):
+// - Last 8KB: BTstack link key storage (PICO_FLASH_BANK)
+// - Next 8KB: Macro storage
+#define FLASH_MACRO_OFFSET (PICO_FLASH_SIZE_BYTES - BTSTACK_FLASH_SIZE - (MACRO_FLASH_SECTORS * FLASH_SECTOR_SIZE))
 #define FLASH_MACRO_ADDR   (XIP_BASE + FLASH_MACRO_OFFSET)
 
 // CRC32 calculation

@@ -12,9 +12,12 @@
 #define MACRO_FRAME_INTERVAL_MS 100         // Stick thinning interval
 #define MACRO_MAX_DURATION_MS   10000       // 10 seconds max recording
 
-// Flash storage configuration (last 8KB of flash)
+// Flash storage configuration
+// NOTE: BTstack uses last 8KB of flash for link key storage (PICO_FLASH_BANK)
+// Macros must be placed before that to avoid overwriting pairing data
 #define FLASH_SECTOR_SIZE       4096
-#define MACRO_FLASH_SECTORS     2
+#define MACRO_FLASH_SECTORS     2           // 8KB total for macros
+#define BTSTACK_FLASH_SIZE      (2 * 4096)  // BTstack uses last 8KB
 #define MACRO_SLOT_SIZE         1024        // Each slot: header + frames
 
 // Single macro frame (9 bytes)

@@ -4,6 +4,11 @@
 // BTstack configuration for picontroller2
 // Based on bluepad32 Pico W example
 
+// IMPORTANT: Define ENABLE_CLASSIC and ENABLE_BLE before anything else
+// This ensures btstack_cyw43.c sets up link key database for pairing persistence
+#define ENABLE_CLASSIC 1
+#define ENABLE_BLE 1
+
 // BTstack features that can be enabled
 #define ENABLE_LOG_INFO
 #define ENABLE_LOG_ERROR

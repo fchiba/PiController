@@ -196,9 +196,6 @@ static void switch_platform_on_init_complete(void) {
     // Start scanning for controllers and auto-connect
     uni_bt_start_scanning_and_autoconnect_unsafe();
 
-    // Delete stored Bluetooth keys on startup (force re-pairing)
-    // uni_bt_del_keys_unsafe();
-
     // Notify LED system - LED control is handled by macro_led_tick() in USB core
     macro_led_set_controller_connected(false);
 

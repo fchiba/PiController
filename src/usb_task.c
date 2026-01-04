@@ -12,7 +12,6 @@
 
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
-#include <pico/flash.h>
 
 #include "report.h"
 #include "switch_descriptors.h"
@@ -49,12 +48,8 @@ void usb_core_task(void) {
     printf("USB: Initializing GPIO buttons...\n");
     gpio_button_init();
 
-    // Initialize flash safety for multi-core operation
-    // This allows Core 1 (Bluetooth) to safely write to flash for link key storage
-    printf("USB: Initializing flash safety for multi-core...\n");
-    if (!flash_safe_execute_core_init()) {
-        printf("USB: Warning - flash_safe_execute_core_init() failed\n");
-    }
+    // Note: flash_safe_execute_core_init() is called in main.c before Core 1 launch
+    // This ensures flash safety is set up before Bluetooth can attempt to store link keys
 
     // Initialize macro system
     printf("USB: Initializing macro system...\n");

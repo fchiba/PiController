@@ -12,6 +12,7 @@
 #include <pico/cyw43_arch.h>
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
+#include <pico/flash.h>
 #include <uni.h>
 
 #include "sdkconfig.h"
@@ -31,8 +32,10 @@ static void bluetooth_core_task(void) {
     multicore_lockout_victim_init();
 
     // Initialize CYW43 driver (enables Bluetooth)
-    // Note: cyw43_arch_init() internally calls btstack_cyw43_init() which sets up
-    // TLV flash storage and link key database for Bluetooth pairing persistence
+    // cyw43_arch_init() calls btstack_cyw43_init() which sets up:
+    // - TLV flash storage in last 8KB of flash (PICO_FLASH_BANK)
+    // - Link key database for Bluetooth pairing persistence
+    // NOTE: Macro storage must not overlap with this region (see macro_types.h)
     if (cyw43_arch_init()) {
         loge("Failed to initialize cyw43_arch\n");
         return;
@@ -59,9 +62,15 @@ int main(void) {
     // (Switch 2 is stricter about USB timing than Switch 1)
     usb_init_and_wait_mount();
 
-    printf("USB: Device mounted, launching Bluetooth on Core 1\n");
+    // Initialize flash safety for multi-core operation BEFORE launching Core 1
+    // This allows Core 1 (Bluetooth) to safely write to flash for link key storage
+    if (!flash_safe_execute_core_init()) {
+        printf("Warning: flash_safe_execute_core_init() failed\n");
+    }
 
-    // Launch Bluetooth on Core 1 (after USB is mounted)
+    printf("Launching Bluetooth on Core 1\n");
+
+    // Launch Bluetooth on Core 1 (after USB is mounted and flash safety is initialized)
     multicore_launch_core1(bluetooth_core_task);
 
     // Run USB on Core 0 (this core)
