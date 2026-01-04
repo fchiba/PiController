@@ -37,7 +37,7 @@ void usb_init_and_wait_mount(void) {
     // This ensures clean USB enumeration without Core1 interference
     while (!tud_mounted()) {
         tud_task();
-        sleep_ms(1);
+        // sleep_ms(1);
     }
     printf("USB: Device mounted\n");
 }
