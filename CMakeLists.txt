@@ -46,7 +46,6 @@ add_executable(picontroller2
     src/macro_flash.c
     src/macro_led.c
     src/slot_led.c
-    src/switch_pro_handler.c
     src/usb_debug.c
 )
 
@@ -81,7 +80,6 @@ target_link_libraries(picontroller2 PUBLIC
     tinyusb_board
     pico_multicore
     pico_flash
-    pico_rand
     hardware_flash
     hardware_pwm
 )

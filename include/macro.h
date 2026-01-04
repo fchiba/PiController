@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "switch_pro_report.h"
+#include "switch_descriptors.h"
 #include "macro_types.h"
 
 // Slot playback mode

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "switch_pro_report.h"
+#include "switch_descriptors.h"
 
 // Macro configuration
 #define MACRO_MAGIC             0x4D414352  // 'MACR'

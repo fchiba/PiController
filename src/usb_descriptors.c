@@ -1,5 +1,5 @@
 /*
- * TinyUSB Descriptor callbacks for Nintendo Switch Pro Controller
+ * TinyUSB Descriptor callbacks for Nintendo Switch HID
  * SPDX-License-Identifier: MIT
  */
 
@@ -7,11 +7,7 @@
 #include <string.h>
 #include "tusb.h"
 #include "switch_descriptors.h"
-#include "switch_pro_handler.h"
 #include "usb_debug.h"
-
-// External handler from usb_task.c
-extern SwitchProHandler g_switch_pro_handler;
 
 //--------------------------------------------------------------------+
 // Device Descriptor
@@ -34,12 +30,13 @@ uint8_t const *tud_hid_descriptor_report_cb(uint8_t instance) {
 #if USB_DEBUG_HEXDUMP
     usb_debug_hexdump("report_desc", switch_report_descriptor, sizeof(switch_report_descriptor));
 #endif
+    (void)instance;
     return switch_report_descriptor;
 }
 
 //--------------------------------------------------------------------+
 // Configuration Descriptor
-// Use TinyUSB macro for proper HID driver initialization
+// Switch requires both IN and OUT endpoints - use TUD_HID_INOUT_DESCRIPTOR
 //--------------------------------------------------------------------+
 
 enum {
@@ -47,8 +44,9 @@ enum {
     ITF_NUM_TOTAL
 };
 
+// TUD_HID_INOUT_DESCRIPTOR length: 9 (interface) + 9 (HID) + 7 (EP OUT) + 7 (EP IN) = 32
 #define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN)
-#define EPNUM_HID_OUT 0x01
+#define EPNUM_HID_OUT 0x02
 #define EPNUM_HID_IN  0x81
 
 static uint8_t const desc_configuration[] = {
@@ -68,7 +66,7 @@ static uint8_t const desc_configuration[] = {
                               EPNUM_HID_OUT,
                               EPNUM_HID_IN,
                               64,  // EP size must be 64 for Switch
-                              8),  // Polling interval 8ms for Pro Controller
+                              1),  // Polling interval 1ms
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
@@ -76,6 +74,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 #if USB_DEBUG_HEXDUMP
     usb_debug_hexdump("config_desc", desc_configuration, sizeof(desc_configuration));
 #endif
+    (void)index;
     return desc_configuration;
 }
 
@@ -87,6 +86,8 @@ static uint16_t _desc_str[32];
 
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     USB_DBG_DESC("string_cb index=%d langid=0x%04x", index, langid);
+
+    (void)langid;
 
     uint8_t chr_count;
 
@@ -129,17 +130,12 @@ uint16_t tud_hid_get_report_cb(uint8_t instance,
                                 uint8_t *buffer,
                                 uint16_t reqlen) {
     USB_DBG_XFER("GET_REPORT instance=%d id=0x%02x type=%d reqlen=%d", instance, report_id, report_type, reqlen);
-    uint16_t ret = switch_pro_handler_get_report(&g_switch_pro_handler,
-                                          report_id,
-                                          report_type,
-                                          buffer,
-                                          reqlen);
-#if USB_DEBUG_HEXDUMP
-    if (ret > 0) {
-        usb_debug_hexdump("GET_REPORT response", buffer, ret);
-    }
-#endif
-    return ret;
+    (void)instance;
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+    return 0;
 }
 
 // Invoked when received SET_REPORT control request or data on OUT endpoint
@@ -152,9 +148,9 @@ void tud_hid_set_report_cb(uint8_t instance,
 #if USB_DEBUG_HEXDUMP
     usb_debug_hexdump("SET_REPORT data", buffer, bufsize);
 #endif
-    switch_pro_handler_set_report(&g_switch_pro_handler,
-                                   report_id,
-                                   report_type,
-                                   buffer,
-                                   bufsize);
+    (void)instance;
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)bufsize;
 }

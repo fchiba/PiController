@@ -12,7 +12,7 @@
 
 #include "sdkconfig.h"
 #include "report.h"
-#include "switch_pro_report.h"
+#include "switch_descriptors.h"
 
 // External LED function for macro system coordination
 extern void macro_led_set_controller_connected(bool connected);

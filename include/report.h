@@ -7,7 +7,7 @@
 #ifndef _REPORT_H_
 #define _REPORT_H_
 
-#include "switch_pro_report.h"
+#include "switch_descriptors.h"
 
 // Set the gamepad report (called from Core 1 - Bluetooth)
 void set_global_gamepad_report(const SwitchOutReport *report);
