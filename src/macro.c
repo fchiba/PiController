@@ -104,6 +104,13 @@ static void start_recording(uint8_t slot, uint32_t now_ms) {
     ctx.last_report.rx = SWITCH_JOYSTICK_MID;
     ctx.last_report.ry = SWITCH_JOYSTICK_MID;
 
+    // Reset stick averaging accumulators
+    ctx.lx_sum = 0;
+    ctx.ly_sum = 0;
+    ctx.rx_sum = 0;
+    ctx.ry_sum = 0;
+    ctx.stick_sample_count = 0;
+
     macro_led_set_recording(true);
     slot_led_set_recording(slot, true);
     printf("Macro: Recording started for slot %d\n", slot);
@@ -268,32 +275,56 @@ void macro_tick(SwitchOutReport *output, const SwitchOutReport *controller_input
                 ctx.last_frame_time = now_ms;
             }
 
+            // Accumulate stick values for averaging
+            ctx.lx_sum += controller_input->lx;
+            ctx.ly_sum += controller_input->ly;
+            ctx.rx_sum += controller_input->rx;
+            ctx.ry_sum += controller_input->ry;
+            ctx.stick_sample_count++;
+
             uint32_t delta = now_ms - ctx.last_frame_time;
 
             // Determine if we should record this frame
             bool should_record = false;
+            bool immediate_record = false;
 
             if (buttons_changed(controller_input, &ctx.last_report)) {
                 // Always record button changes immediately
                 should_record = true;
-            } else if (sticks_changed(controller_input, &ctx.last_report) &&
-                       delta >= MACRO_FRAME_INTERVAL_MS) {
-                // Thin stick movements to 100ms intervals
-                should_record = true;
-            } else if (delta >= MACRO_FRAME_INTERVAL_MS &&
-                       !is_neutral_report(controller_input)) {
-                // Also record periodically if there's any input
+                immediate_record = true;
+            } else if (delta >= MACRO_FRAME_INTERVAL_MS) {
+                // Record at interval with averaged stick values
                 should_record = true;
             }
 
             if (should_record && ctx.record_count < MACRO_MAX_FRAMES) {
                 MacroFrame *frame = &ctx.record_buffer[ctx.record_count];
                 uint16_t capped_delta = (delta > 65535) ? 65535 : (uint16_t)delta;
-                report_to_frame(frame, controller_input, capped_delta);
+
+                if (immediate_record || ctx.stick_sample_count == 0) {
+                    // Use current values for immediate button changes
+                    report_to_frame(frame, controller_input, capped_delta);
+                } else {
+                    // Use averaged stick values
+                    frame->delta_ms = capped_delta;
+                    frame->buttons = controller_input->buttons;
+                    frame->hat = controller_input->hat;
+                    frame->lx = (uint8_t)(ctx.lx_sum / ctx.stick_sample_count);
+                    frame->ly = (uint8_t)(ctx.ly_sum / ctx.stick_sample_count);
+                    frame->rx = (uint8_t)(ctx.rx_sum / ctx.stick_sample_count);
+                    frame->ry = (uint8_t)(ctx.ry_sum / ctx.stick_sample_count);
+                }
 
                 ctx.record_count++;
                 ctx.last_frame_time = now_ms;
                 memcpy(&ctx.last_report, controller_input, sizeof(SwitchOutReport));
+
+                // Reset accumulators
+                ctx.lx_sum = 0;
+                ctx.ly_sum = 0;
+                ctx.rx_sum = 0;
+                ctx.ry_sum = 0;
+                ctx.stick_sample_count = 0;
             }
 
             // Check if buffer full

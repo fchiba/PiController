@@ -8,17 +8,17 @@
 // Macro configuration
 #define MACRO_MAGIC             0x4D414352  // 'MACR'
 #define MACRO_SLOT_COUNT        5
-#define MACRO_MAX_FRAMES        100         // 10 seconds at 100ms intervals
-#define MACRO_FRAME_INTERVAL_MS 100         // Stick thinning interval
+#define MACRO_MAX_FRAMES        1250        // 10 seconds at 125Hz (no thinning)
+#define MACRO_FRAME_INTERVAL_MS 64          // Stick averaging interval
 #define MACRO_MAX_DURATION_MS   10000       // 10 seconds max recording
 
 // Flash storage configuration
 // NOTE: BTstack uses last 8KB of flash for link key storage (PICO_FLASH_BANK)
 // Macros must be placed before that to avoid overwriting pairing data
 #define FLASH_SECTOR_SIZE       4096
-#define MACRO_FLASH_SECTORS     2           // 8KB total for macros
+#define MACRO_FLASH_SECTORS     16          // 64KB total for macros
 #define BTSTACK_FLASH_SIZE      (2 * 4096)  // BTstack uses last 8KB
-#define MACRO_SLOT_SIZE         1024        // Each slot: header + frames
+#define MACRO_SLOT_SIZE         12288       // Each slot: 12KB (header + 1250 frames)
 
 // Single macro frame (9 bytes)
 typedef struct __attribute__((packed)) {
@@ -58,6 +58,10 @@ typedef struct {
     uint32_t last_frame_time;
     bool first_input_received;
     SwitchOutReport last_report;
+
+    // Stick averaging accumulators
+    int32_t lx_sum, ly_sum, rx_sum, ry_sum;
+    uint16_t stick_sample_count;
 
     // Playback state
     MacroFrame play_buffer[MACRO_MAX_FRAMES];  // Copy from flash
